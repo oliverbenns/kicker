@@ -15,9 +15,9 @@ package:
     - ./bin/**
 
 functions:
-  hello:
-    handler: bin/hello
+  check-domain-availability:
+    handler: bin/check-domain-availability
     events:
       - http:
-          path: hello
+          path: check-domain-availability
           method: get
