@@ -7,6 +7,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"log"
+	"os/exec"
+	"strings"
 )
 
 // Response is of type APIGatewayProxyResponse since we're leveraging the
@@ -38,6 +41,18 @@ func Handler(ctx context.Context) (Response, error) {
 	}
 
 	return resp, nil
+}
+
+func IsDomainAvailable(domain string) bool {
+	cmd := exec.Command("whois", domain)
+	out, err := cmd.Output()
+
+	if err != nil {
+		log.Print("Error performing whois query", domain, err)
+		return false
+	}
+
+	return strings.Contains(string(out), "No match for domain")
 }
 
 func main() {
