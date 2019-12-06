@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -22,8 +23,11 @@ type Response events.APIGatewayProxyResponse
 func Handler(ctx context.Context) (Response, error) {
 	var buf bytes.Buffer
 
+	domains := os.Getenv("WANTED_DOMAINS")
+
 	body, err := json.Marshal(map[string]interface{}{
-		"message": "Go Serverless v1.0! Your function executed successfully!",
+		"message":            "Go Serverless v1.0! Your function executed successfully!",
+		"domains configured": domains,
 	})
 	if err != nil {
 		return Response{StatusCode: 404}, err
