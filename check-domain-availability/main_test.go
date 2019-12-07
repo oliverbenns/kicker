@@ -1,8 +1,17 @@
 package main
 
 import (
+	"context"
+	"os"
 	"testing"
 )
+
+func TestHandler(t *testing.T) {
+	ctx := context.Background()
+	os.Setenv("WANTED_DOMAINS", "google.com,tzacwierjiyknoelkefbmyankdnlxbvaoujuizfy.com")
+
+	_, _ = Handler(ctx)
+}
 
 func TestIsDomainAvailable_Available(t *testing.T) {
 	isAvailable := IsDomainAvailable("tzacwierjiyknoelkefbmyankdnlxbvaoujuizfy.com")

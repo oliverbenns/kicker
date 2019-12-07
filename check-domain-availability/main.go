@@ -21,13 +21,27 @@ type Response events.APIGatewayProxyResponse
 
 // Handler is our lambda handler invoked by the `lambda.Start` function call
 func Handler(ctx context.Context) (Response, error) {
+	var domainsAvailable string
+	var domainsUnavailable string
+	domains := strings.Split(os.Getenv("WANTED_DOMAINS"), ",")
+
+	for _, domain := range domains {
+
+		isAvailable := IsDomainAvailable(domain)
+
+		if isAvailable {
+			domainsAvailable += domain
+		} else {
+			domainsUnavailable += domain
+		}
+	}
+
 	var buf bytes.Buffer
 
-	domains := os.Getenv("WANTED_DOMAINS")
-
 	body, err := json.Marshal(map[string]interface{}{
-		"message":            "Go Serverless v1.0! Your function executed successfully!",
-		"domains configured": domains,
+		"message":               "Go Serverless v1.0! Your function executed successfully!",
+		"domains available":     domainsAvailable,
+		"domains not available": domainsUnavailable,
 	})
 	if err != nil {
 		return Response{StatusCode: 404}, err
