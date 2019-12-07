@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/domainr/whois"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -48,15 +48,15 @@ func Handler(ctx context.Context) (Response, error) {
 }
 
 func IsDomainAvailable(domain string) bool {
-	cmd := exec.Command("whois", domain)
-	out, err := cmd.Output()
+	request, _ := whois.NewRequest(domain)
+	out, err := whois.DefaultClient.Fetch(request)
 
 	if err != nil {
 		log.Print("Error performing whois query", domain, err)
 		return false
 	}
 
-	return strings.Contains(string(out), "No match for domain")
+	return strings.Contains(string(out.Body), "No match for")
 }
 
 func main() {
