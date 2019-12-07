@@ -7,7 +7,7 @@ clean:
 	rm -rf ./bin
 
 test:
-	go test check-domain-availability/*.go
+	go test check-domain-availability/*.go -v
 
 deploy: clean build
 	sls deploy --verbose
