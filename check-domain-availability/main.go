@@ -1,28 +1,42 @@
 package main
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/domainr/whois"
 	"log"
 	"os"
 	"strings"
 )
 
-// Response is of type APIGatewayProxyResponse since we're leveraging the
-// AWS Lambda Proxy Request functionality (default behavior)
-//
-// https://serverless.com/framework/docs/providers/aws/events/apigateway/#lambda-proxy-integration
-type Response events.APIGatewayProxyResponse
+func NotifyAvailable(domain string) {
+	appName := os.Getenv("APP_NAME")
+	message := domain + " is available."
+	topicArn := os.Getenv("AWS_SNS_ARN")
 
-// Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context) (Response, error) {
-	var domainsAvailable string
-	var domainsUnavailable string
+	session := session.Must(session.NewSession())
+	config := aws.NewConfig().WithRegion(os.Getenv("AWS_SNS_REGION"))
+	svc := sns.New(session, config)
+
+	svc.SetSMSAttributes(&sns.SetSMSAttributesInput{
+		Attributes: map[string]*string{
+			"SenderID": &appName,
+		},
+	})
+
+	_, err := svc.Publish(&sns.PublishInput{
+		Message:  &message,
+		TopicArn: &topicArn,
+	})
+
+	if err != nil {
+		log.Print("Error notifying", err)
+	}
+}
+
+func Handler() {
 	domains := strings.Split(os.Getenv("WANTED_DOMAINS"), ",")
 
 	for _, domain := range domains {
@@ -30,39 +44,15 @@ func Handler(ctx context.Context) (Response, error) {
 		isAvailable := IsDomainAvailable(domain)
 
 		if isAvailable {
-			domainsAvailable += domain
-		} else {
-			domainsUnavailable += domain
+			log.Print(domain, "is available.")
+			NotifyAvailable(domain)
 		}
 	}
-
-	var buf bytes.Buffer
-
-	body, err := json.Marshal(map[string]interface{}{
-		"message":               "Go Serverless v1.0! Your function executed successfully!",
-		"domains available":     domainsAvailable,
-		"domains not available": domainsUnavailable,
-	})
-	if err != nil {
-		return Response{StatusCode: 404}, err
-	}
-	json.HTMLEscape(&buf, body)
-
-	resp := Response{
-		StatusCode:      200,
-		IsBase64Encoded: false,
-		Body:            buf.String(),
-		Headers: map[string]string{
-			"Content-Type":           "application/json",
-			"X-MyCompany-Func-Reply": "check-domain-availability-handler",
-		},
-	}
-
-	return resp, nil
 }
 
 func IsDomainAvailable(domain string) bool {
 	request, _ := whois.NewRequest(domain)
+
 	out, err := whois.DefaultClient.Fetch(request)
 
 	if err != nil {

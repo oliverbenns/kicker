@@ -18,6 +18,6 @@ functions:
   check-domain-availability:
     handler: bin/check-domain-availability
     events:
-      - http:
-          path: check-domain-availability
-          method: get
+    - schedule:
+        rate: cron(0 12 * * ? *)
+        enabled: true
