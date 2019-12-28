@@ -8,6 +8,11 @@ provider:
   # No dev env currently exists.
   stage: prod
   region: eu-west-2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+      Resource: ${env:AWS_SNS_ARN}
 
 package:
   exclude:
