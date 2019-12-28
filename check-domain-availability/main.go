@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+type Notifier = func(domain string)
+
 func NotifyAvailable(domain string) {
 	appName := os.Getenv("APP_NAME")
 	message := domain + " is available."
@@ -36,18 +38,26 @@ func NotifyAvailable(domain string) {
 	}
 }
 
-func Handler() {
-	domains := strings.Split(os.Getenv("WANTED_DOMAINS"), ",")
+func CreateHandler(notify Notifier) func() {
+	return func() {
+		domains := strings.Split(os.Getenv("WANTED_DOMAINS"), ",")
 
-	for _, domain := range domains {
+		for _, domain := range domains {
 
-		isAvailable := IsDomainAvailable(domain)
+			isAvailable := IsDomainAvailable(domain)
 
-		if isAvailable {
-			log.Print(domain, "is available.")
-			NotifyAvailable(domain)
+			if isAvailable {
+				log.Print(domain, "is available.")
+				notify(domain)
+			}
 		}
 	}
+}
+
+// @TODO: Is there a better way to do this? func Handler() = CreateHandler(NotifyAvailable)
+func Handler() {
+	handler := CreateHandler(NotifyAvailable)
+	handler()
 }
 
 func IsDomainAvailable(domain string) bool {

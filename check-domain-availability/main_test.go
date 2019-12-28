@@ -5,9 +5,22 @@ import (
 	"testing"
 )
 
-func TestHandler(t *testing.T) {
-	os.Setenv("WANTED_DOMAINS", "google.com,tzacwierjiyknoelkefbmyankdnlxbvaoujuizfy.com")
+func TestHandler_Notifies(t *testing.T) {
+	os.Setenv("WANTED_DOMAINS", "tzacwierjiyknoelkefbmyankdnlxbvaoujuizfy.com")
 
+	called := false
+
+	notify := func(domain string) {
+		called = true
+	}
+
+	handler := CreateHandler(notify)
+
+	handler()
+
+	if !called {
+		t.Error("Did not notify available domain")
+	}
 }
 
 func TestIsDomainAvailable_Available(t *testing.T) {
