@@ -1,4 +1,7 @@
-.PHONY: build clean deploy
+include .env
+export $(shell sed 's/=.*//' .env)
+
+.PHONY: build clean deploy test
 
 build:
 	env GOOS=linux go build -ldflags="-s -w" -o bin/check-domain-availability check-domain-availability/main.go
