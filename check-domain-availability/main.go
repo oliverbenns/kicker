@@ -47,7 +47,7 @@ func CreateHandler(notify Notifier) func() {
 			isAvailable := IsDomainAvailable(domain)
 
 			if isAvailable {
-				log.Print(domain, "is available.")
+				log.Print(domain, " is available.")
 				notify(domain)
 			}
 		}
