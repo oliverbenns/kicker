@@ -2,53 +2,22 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/domainr/whois"
+	"github.com/oliverbenns/kicker/notifications"
 	"log"
 	"os"
 	"strings"
 )
 
-type Notifier = func(domain string)
-
-func NotifyAvailable(domain string) {
-	appName := os.Getenv("APP_NAME")
-	message := domain + " is available."
-	topicArn := os.Getenv("AWS_SNS_ARN")
-
-	session := session.Must(session.NewSession())
-	config := aws.NewConfig().WithRegion(os.Getenv("AWS_SNS_REGION"))
-	svc := sns.New(session, config)
-
-	svc.SetSMSAttributes(&sns.SetSMSAttributesInput{
-		Attributes: map[string]*string{
-			"SenderID": &appName,
-		},
-	})
-
-	_, err := svc.Publish(&sns.PublishInput{
-		Message:  &message,
-		TopicArn: &topicArn,
-	})
-
-	if err != nil {
-		log.Print("Error notifying", err)
-	}
-}
-
-func CreateHandler(notify Notifier) func() {
+func CreateHandler(notify notifications.Notifier) func() {
 	return func() {
 		domains := strings.Split(os.Getenv("WANTED_DOMAINS"), ",")
 
 		for _, domain := range domains {
-
-			isAvailable := IsDomainAvailable(domain)
-
-			if isAvailable {
-				log.Print(domain, " is available.")
-				notify(domain)
+			if IsDomainAvailable(domain) {
+				message := domain + " is available."
+				log.Print(message)
+				notify(message)
 			}
 		}
 	}
@@ -56,7 +25,7 @@ func CreateHandler(notify Notifier) func() {
 
 // @TODO: Is there a better way to do this? func Handler() = CreateHandler(NotifyAvailable)
 func Handler() {
-	handler := CreateHandler(NotifyAvailable)
+	handler := CreateHandler(notifications.Notify)
 	handler()
 }
 
