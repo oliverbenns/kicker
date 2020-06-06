@@ -1,12 +1,18 @@
 package main
 
 import (
-	"os"
+	"fmt"
+	"net/http"
 	"testing"
 )
 
 func TestHandler_Notifies(t *testing.T) {
-	os.Setenv("WANTED_DOMAINS", "tzacwierjiyknoelkefbmyankdnlxbvaoujuizfy.com")
+	go func() {
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "name,com,co\ntzacwierjiyknoelkefbmyankdnlxbvaoujuizfy,1,1")
+		})
+		http.ListenAndServe(":8080", nil)
+	}()
 
 	called := false
 
@@ -14,7 +20,7 @@ func TestHandler_Notifies(t *testing.T) {
 		called = true
 	}
 
-	handler := CreateHandler(notify)
+	handler := CreateHandler(notify, "http://localhost:8080")
 
 	handler()
 
