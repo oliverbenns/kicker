@@ -24,8 +24,8 @@ functions:
   check-domain-availability:
     handler: bin/check-domain-availability
     events:
-      - schedule: cron(0 12 * * ? *)
+      - schedule: rate(2 hours)
   check-website-up:
     handler: bin/check-website-up
     events:
-      - schedule: cron(0 12 * * ? *)
+      - schedule: rate(2 hours)
