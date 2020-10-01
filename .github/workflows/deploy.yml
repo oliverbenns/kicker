@@ -17,5 +17,5 @@ jobs:
       - uses: actions/setup-go@v2
       - run: make test
       - uses: actions/setup-node@v1
-      - run: npm install -g serverless
+      - run: npm install -g serverless@~1.83.0
       - run: make deploy
