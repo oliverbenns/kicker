@@ -1,6 +1,3 @@
--include .env
-export $(shell sed 's/=.*//' .env)
-
 .PHONY: build clean deploy test
 
 build:
