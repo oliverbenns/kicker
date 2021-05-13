@@ -10,12 +10,18 @@ env:
   AWS_SNS_REGION: ${{ secrets.AWS_SNS_REGION }}
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
       - run: make test
-      - uses: actions/setup-node@v1
-      - run: npm install -g serverless@~1.83.0
-      - run: make deploy
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+      - run: make build
+      - run: pip install awscli
+      - run: aws s3 sync bin s3://${{ secrets.AWS_S3_BUCKET }} --delete
