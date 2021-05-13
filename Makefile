@@ -1,15 +1,15 @@
 .PHONY: build clean deploy test
 
 build:
-	env GOOS=linux go build -ldflags="-s -w" -o bin/check-domain-availability check-domain-availability/main.go
-	env GOOS=linux go build -ldflags="-s -w" -o bin/check-website-up check-website-up/main.go
+	go build -o bin/domainfree cmd/domainfree/main.go
+	go build -o bin/websiteup cmd/websiteup/main.go
 
 clean:
 	rm -rf ./bin
 
 test:
-	go test check-domain-availability/*.go -v
-	go test check-website-up/*.go -v
+	go test cmd/domainfree/*.go -v
+	go test cmd/websiteup/*.go -v
 
 deploy: clean build
 	sls deploy --verbose

@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/domainr/whois"
-	"github.com/oliverbenns/kicker/notifications"
+	"github.com/oliverbenns/kicker/internal/notifications"
 )
 
 type Ctx struct{}

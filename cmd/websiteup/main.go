@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/oliverbenns/kicker/notifications"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/oliverbenns/kicker/internal/notifications"
 )
 
 func CreateHandler(notify notifications.Notifier) func() {
