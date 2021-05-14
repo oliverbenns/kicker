@@ -8,7 +8,7 @@ clean:
 	rm -rf ./bin
 
 test:
-	go test cmd/ping/*.go -v
+	go test cmd/domainfree/*.go -v
 	go test cmd/ping/*.go -v
 
 deploy: clean build
