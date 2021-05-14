@@ -1,17 +1,18 @@
 package notifications
 
 import (
+	"log"
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"log"
-	"os"
 )
 
 type Notifier = func(domain string)
 
 func Notify(message string) {
-	appName := os.Getenv("APP_NAME")
+	appName := "Kicker"
 	topicArn := os.Getenv("AWS_SNS_ARN")
 
 	session := session.Must(session.NewSession())
