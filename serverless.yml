@@ -26,6 +26,6 @@ functions:
     events:
       - schedule: rate(2 hours)
   check-website-up:
-    handler: bin/websiteup
+    handler: bin/ping
     events:
       - schedule: rate(2 hours)

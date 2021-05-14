@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-go@v2
       - run: make build
       - run: mkdir zip
-      - run: zip zip/websiteup.zip bin/websiteup
+      - run: zip zip/ping.zip bin/ping
       - run: zip zip/domainfree.zip bin/domainfree
       - run: pip install awscli
       - run: aws s3 sync zip s3://${{ secrets.AWS_S3_BUCKET }} --delete
