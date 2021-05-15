@@ -11,30 +11,38 @@ import (
 	"github.com/oliverbenns/kicker/internal/notifications"
 )
 
-func CreateHandler(notify notifications.Notifier) func() {
-	return func() {
-		endpoints := strings.Split(os.Getenv("CONCERNED_ENDPOINTS"), ",")
+type Ctx struct {
+	Notify  func(domain string)
+	GetUrls func() []string
+}
 
-		for _, endpoint := range endpoints {
-			resp, err := http.Get(endpoint)
+func (c *Ctx) Run() {
+	urls := c.GetUrls()
+	for _, url := range urls {
+		resp, err := http.Get(url)
 
-			if err != nil {
-				log.Print("Error getting website status", endpoint, err)
-			}
+		if err != nil {
+			log.Print("Error getting website status", url, err)
+		}
 
-			if resp.StatusCode >= 400 {
-				message := endpoint + " is down. Status code: " + strconv.Itoa(resp.StatusCode) + "."
-				log.Print(message)
-				notify(message)
-			}
+		if resp.StatusCode >= 400 {
+			message := url + " is down. Status code: " + strconv.Itoa(resp.StatusCode) + "."
+			log.Print(message)
+			c.Notify(message)
 		}
 	}
 }
 
-// @TODO: Is there a better way to do this? func Handler() = CreateHandler(NotifyAvailable)
 func Handler() {
-	handler := CreateHandler(notifications.Notify)
-	handler()
+	ctx := Ctx{
+		Notify: notifications.Notify,
+		GetUrls: func() []string {
+			return strings.Split(os.Getenv("CONCERNED_ENDPOINTS"), ",")
+
+		},
+	}
+
+	ctx.Run()
 }
 
 func main() {

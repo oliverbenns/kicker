@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 )
 
-type Notifier = func(domain string)
-
 func Notify(message string) {
 	appName := "Kicker"
 	topicArn := os.Getenv("AWS_SNS_ARN")

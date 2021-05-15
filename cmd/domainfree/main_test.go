@@ -16,13 +16,16 @@ func TestHandler_Notifies(t *testing.T) {
 
 	called := false
 
-	notify := func(domain string) {
-		called = true
+	ctx := Ctx{
+		Notify: func(domain string) {
+			called = true
+		},
+		GetCsvUrl: func() string {
+			return "http://localhost:8080"
+		},
 	}
 
-	handler := CreateHandler(notify, "http://localhost:8080")
-
-	handler()
+	ctx.Run()
 
 	if !called {
 		t.Error("Did not notify available domain")
