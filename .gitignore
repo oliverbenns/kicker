@@ -19,3 +19,6 @@ bin
 
 # Don't copy our locals!
 .env
+
+# zip for uploading to s3
+zip
