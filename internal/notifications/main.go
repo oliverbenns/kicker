@@ -1,34 +1,33 @@
 package notifications
 
 import (
-	"log"
-	"os"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
 
-func Notify(message string) {
+type Ctx struct {
+	Sns      *sns.SNS
+	TopicArn string
+}
+
+func (c *Ctx) Notify(message string) error {
 	appName := "Kicker"
-	topicArn := os.Getenv("AWS_SNS_ARN")
 
-	session := session.Must(session.NewSession())
-	config := aws.NewConfig().WithRegion(os.Getenv("AWS_SNS_REGION"))
-	svc := sns.New(session, config)
-
-	svc.SetSMSAttributes(&sns.SetSMSAttributesInput{
+	c.Sns.SetSMSAttributes(&sns.SetSMSAttributesInput{
 		Attributes: map[string]*string{
 			"SenderID": &appName,
 		},
 	})
 
-	_, err := svc.Publish(&sns.PublishInput{
+	_, err := c.Sns.Publish(&sns.PublishInput{
 		Message:  &message,
-		TopicArn: &topicArn,
+		TopicArn: &c.TopicArn,
 	})
 
 	if err != nil {
-		log.Print("Error notifying", err)
+		return fmt.Errorf("failed to notify: %w", err)
 	}
+
+	return nil
 }

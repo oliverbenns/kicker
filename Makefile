@@ -8,6 +8,9 @@ clean:
 	rm -rf ./bin
 	rm -rf ./zip
 
+start-localstack:
+	docker run -d --rm -it -p 4566:4566 -p 4571:4571 localstack/localstack
+
 test:
 	go test cmd/domainfree/*.go -v
 	go test cmd/ping/*.go -v

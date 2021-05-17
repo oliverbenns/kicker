@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,21 +11,23 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/domainr/whois"
 	"github.com/oliverbenns/kicker/internal/notifications"
 )
 
 type Ctx struct {
-	Notify    func(domain string)
+	Notifier  *notifications.Ctx
 	GetCsvUrl func() string
 }
 
-func (c *Ctx) Run() {
+func (c *Ctx) Run() error {
 	url := c.GetCsvUrl()
 	resp, err := http.Get(url)
-
 	if err != nil {
-		panic("Error obtaining url list")
+		return fmt.Errorf("error obtaining url list: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -32,9 +35,8 @@ func (c *Ctx) Run() {
 	r := csv.NewReader(resp.Body)
 
 	headers, err := r.Read()
-
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error reading csv: %w", err)
 	}
 
 	for {
@@ -44,7 +46,7 @@ func (c *Ctx) Run() {
 		}
 
 		if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("error reading csv row: %w", err)
 		}
 
 		var name string
@@ -56,7 +58,7 @@ func (c *Ctx) Run() {
 			val, err := strconv.Atoi(column)
 
 			if err != nil {
-				log.Fatal(err)
+				return fmt.Errorf("error converting column: %w", err)
 			}
 
 			if val > 0 {
@@ -66,11 +68,14 @@ func (c *Ctx) Run() {
 				if IsDomainAvailable(domain) {
 					message := domain + " is available."
 					log.Print(message)
-					c.Notify(message)
+					err := c.Notifier.Notify(message)
+					return err
 				}
 			}
 		}
 	}
+
+	return nil
 }
 
 func IsDomainAvailable(domain string) bool {
@@ -90,14 +95,25 @@ func IsDomainAvailable(domain string) bool {
 }
 
 func Handler() {
+	config := aws.NewConfig().WithRegion(os.Getenv("AWS_SNS_REGION"))
+	session := session.Must(session.NewSession())
+
+	notifierCtx := &notifications.Ctx{
+		Sns:      sns.New(session, config),
+		TopicArn: os.Getenv("AWS_SNS_ARN"),
+	}
+
 	ctx := Ctx{
-		Notify: notifications.Notify,
+		Notifier: notifierCtx,
 		GetCsvUrl: func() string {
 			return os.Getenv("DOMAINS_CSV_URL")
 		},
 	}
 
-	ctx.Run()
+	err := ctx.Run()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
