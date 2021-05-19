@@ -9,7 +9,7 @@ clean:
 	rm -rf ./zip
 
 start-localstack:
-	docker run -d --rm -it -p 4566:4566 -p 4571:4571 --add-host=host.docker.internal:host-gateway localstack/localstack
+	docker run -d --rm -it -p 4566:4566 -p 4571:4571 --add-host=host.docker.internal:host-gateway -e "SERVICES=sns,stepfunctions,s3" localstack/localstack
 
 test:
 	go test cmd/domainfree/*.go -v
