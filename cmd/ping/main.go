@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/oliverbenns/kicker/internal/notifications"
@@ -40,11 +39,10 @@ func (c *Ctx) Run() error {
 }
 
 func Handler() {
-	config := aws.NewConfig().WithRegion(os.Getenv("AWS_SNS_REGION"))
-	session := session.Must(session.NewSession())
+	sess := session.Must(session.NewSession())
 
 	notifierCtx := &notifications.Ctx{
-		Sns:      sns.New(session, config),
+		Sns:      sns.New(sess),
 		TopicArn: os.Getenv("AWS_SNS_ARN"),
 	}
 
