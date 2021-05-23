@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -13,27 +13,37 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/domainr/whois"
 	"github.com/oliverbenns/kicker/internal/notifications"
 )
 
 type Ctx struct {
-	Notifier  *notifications.Ctx
-	GetCsvUrl func() string
+	Notifier   *notifications.Ctx
+	Downloader *s3manager.Downloader
+	BucketName string
+}
+
+func (c *Ctx) DownloadCsv() (*bytes.Buffer, error) {
+	buf := aws.NewWriteAtBuffer([]byte{})
+
+	_, err := c.Downloader.Download(buf, &s3.GetObjectInput{
+		Bucket: aws.String(c.BucketName),
+		Key:    aws.String("domains.csv"),
+	})
+
+	return bytes.NewBuffer(buf.Bytes()), err
 }
 
 func (c *Ctx) Run() error {
-	url := c.GetCsvUrl()
-	resp, err := http.Get(url)
+	data, err := c.DownloadCsv()
 	if err != nil {
-		return fmt.Errorf("error obtaining url list: %w", err)
+		return fmt.Errorf("error obtaining domain list: %w", err)
 	}
 
-	defer resp.Body.Close()
-
-	r := csv.NewReader(resp.Body)
-
+	r := csv.NewReader(data)
 	headers, err := r.Read()
 	if err != nil {
 		return fmt.Errorf("error reading csv: %w", err)
@@ -95,25 +105,22 @@ func IsDomainAvailable(domain string) bool {
 }
 
 func Handler() {
-	config := aws.NewConfig().WithRegion(os.Getenv("AWS_SNS_REGION"))
-	session := session.Must(session.NewSession())
+	sess := session.Must(session.NewSession())
+
+	downloader := s3manager.NewDownloader(sess)
 
 	notifierCtx := &notifications.Ctx{
-		Sns:      sns.New(session, config),
+		Sns:      sns.New(sess),
 		TopicArn: os.Getenv("AWS_SNS_ARN"),
 	}
 
 	ctx := Ctx{
-		Notifier: notifierCtx,
-		GetCsvUrl: func() string {
-			return os.Getenv("DOMAINS_CSV_URL")
-		},
+		Notifier:   notifierCtx,
+		Downloader: downloader,
+		BucketName: "kicker-data",
 	}
 
-	err := ctx.Run()
-	if err != nil {
-		panic(err)
-	}
+	ctx.Run()
 }
 
 func main() {

@@ -13,7 +13,10 @@ func TestPingNotifies(t *testing.T) {
 	err := test.WaitForLocalStack()
 	require.NoError(t, err)
 
-	sns, err := test.NewSns()
+	sess, err := test.NewAwsSession()
+	require.NoError(t, err)
+
+	sns, err := test.NewSns(sess)
 	require.NoError(t, err)
 
 	sub, err := test.NewSubscriber(sns)

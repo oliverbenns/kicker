@@ -11,18 +11,8 @@ type testSns struct {
 	TopicArn *string
 }
 
-func NewSns() (*testSns, error) {
-	config := &aws.Config{
-		Region:   aws.String("eu-west-1"),
-		Endpoint: aws.String("http://localhost:4566"),
-	}
-
-	session, err := session.NewSession()
-	if err != nil {
-		return nil, err
-	}
-
-	snsClient := sns.New(session, config)
+func NewSns(sess *session.Session) (*testSns, error) {
+	snsClient := sns.New(sess)
 
 	topic, err := snsClient.CreateTopic(&sns.CreateTopicInput{
 		Name: aws.String("Kicker"),

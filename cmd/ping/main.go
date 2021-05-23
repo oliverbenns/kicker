@@ -56,10 +56,7 @@ func Handler() {
 		},
 	}
 
-	err := ctx.Run()
-	if err != nil {
-		panic(err)
-	}
+	ctx.Run()
 }
 
 func main() {
