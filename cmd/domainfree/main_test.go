@@ -1,13 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/oliverbenns/kicker/internal/notifications"
 	"github.com/oliverbenns/kicker/test"
@@ -15,37 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testBucketName = "test-bucket"
-
-func createTestBucket(sess *session.Session) error {
-	s3Client := s3.New(sess)
-
-	_, err := s3Client.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(testBucketName),
-	})
-	if err != nil {
-		aerr, ok := err.(awserr.Error)
-		if ok && aerr.Code() == s3.ErrCodeBucketAlreadyExists {
-			return nil
-		}
-	}
-
-	return err
-}
-
-func uploadToBucket(sess *session.Session) error {
-	// Create an uploader with the session and default options
-	uploader := s3manager.NewUploader(sess)
-	buf := bytes.NewBufferString("name,com,co\ntzacwierjiyknoelkefbmyankdnlxbvaoujuizfy,1,0")
-
-	_, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(testBucketName),
-		Key:    aws.String("domains.csv"),
-		Body:   buf,
-	})
-
-	return err
-}
+const data = "name,com,co\ntzacwierjiyknoelkefbmyankdnlxbvaoujuizfy,1,0"
+const fileName = "domains.csv"
 
 func TestDomainFreeNotifies(t *testing.T) {
 	err := test.WaitForLocalStack()
@@ -54,13 +20,11 @@ func TestDomainFreeNotifies(t *testing.T) {
 	sess, err := test.NewAwsSession()
 	require.NoError(t, err)
 
-	err = createTestBucket(sess)
+	bucketName, err := test.CreateBucket(sess)
 	require.NoError(t, err)
 
-	err = uploadToBucket(sess)
+	err = test.UploadToBucket(sess, fileName, data)
 	require.NoError(t, err)
-
-	downloader := s3manager.NewDownloader(sess)
 
 	sns, err := test.NewSns(sess)
 	require.NoError(t, err)
@@ -80,8 +44,8 @@ func TestDomainFreeNotifies(t *testing.T) {
 
 	ctx := Ctx{
 		Notifier:   notifierCtx,
-		Downloader: downloader,
-		BucketName: testBucketName,
+		Downloader: s3manager.NewDownloader(sess),
+		BucketName: bucketName,
 	}
 
 	ctx.Run()

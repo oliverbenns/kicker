@@ -78,8 +78,7 @@ func (c *Ctx) Run() error {
 				if IsDomainAvailable(domain) {
 					message := domain + " is available."
 					log.Print(message)
-					err := c.Notifier.Notify(message)
-					return err
+					return c.Notifier.Notify(message)
 				}
 			}
 		}
@@ -107,8 +106,6 @@ func IsDomainAvailable(domain string) bool {
 func Handler() {
 	sess := session.Must(session.NewSession())
 
-	downloader := s3manager.NewDownloader(sess)
-
 	notifierCtx := &notifications.Ctx{
 		Sns:      sns.New(sess),
 		TopicArn: os.Getenv("AWS_SNS_ARN"),
@@ -116,7 +113,7 @@ func Handler() {
 
 	ctx := Ctx{
 		Notifier:   notifierCtx,
-		Downloader: downloader,
+		Downloader: s3manager.NewDownloader(sess),
 		BucketName: "kicker-data",
 	}
 
