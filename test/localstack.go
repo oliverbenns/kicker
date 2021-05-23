@@ -13,18 +13,21 @@ type LocalStackStatus struct {
 }
 
 func WaitForLocalStack() error {
-	log.Print("waiting for localstack to start")
 	deadline := time.Now().Add(20 * time.Second)
+	printed := false
 
 	for {
 		if deadline.Before(time.Now()) {
 			return errors.New("timed out waiting for localstack to start")
 		}
 
-		time.Sleep(1 * time.Second)
-
 		r, err := http.Get("http://localhost:4566")
 		if err != nil {
+			if !printed {
+				printed = true
+				log.Print("waiting for localstack to start")
+
+			}
 			continue
 		}
 
@@ -32,6 +35,11 @@ func WaitForLocalStack() error {
 		var status LocalStackStatus
 		err = json.NewDecoder(r.Body).Decode(&status)
 		if err != nil || status.Status != "running" {
+			if !printed {
+				printed = true
+				log.Print("waiting for localstack to start")
+			}
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
