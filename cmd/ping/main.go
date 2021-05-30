@@ -82,8 +82,11 @@ func (c *Ctx) Run() error {
 	return nil
 }
 
-func Handler() {
-	sess := session.Must(session.NewSession())
+func Handler() error {
+	sess, err := session.NewSession()
+	if err != nil {
+		return err
+	}
 
 	notifierCtx := &notifications.Ctx{
 		Sns:      sns.New(sess),
@@ -96,7 +99,7 @@ func Handler() {
 		BucketName: "kicker-data",
 	}
 
-	ctx.Run()
+	return ctx.Run()
 }
 
 func main() {
