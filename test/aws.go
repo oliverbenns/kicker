@@ -37,7 +37,6 @@ func CreateBucket(sess *session.Session) (string, error) {
 }
 
 func UploadToBucket(sess *session.Session, fileName, data string) error {
-	// Create an uploader with the session and default options
 	uploader := s3manager.NewUploader(sess)
 	buf := bytes.NewBufferString(data)
 
