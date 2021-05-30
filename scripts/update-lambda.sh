@@ -14,7 +14,8 @@ if [ 0 -eq $? ]; then
 	aws lambda update-function-code  \
     		--function-name $1  \
     		--s3-bucket kicker-deployments \
-		--s3-key $2
+		--s3-key $2 \
+		> /dev/null
 else
 	echo "Lambda '$1' does not exist - this means that it needs to be created with CDK first"
 fi
