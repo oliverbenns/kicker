@@ -1,8 +1,9 @@
 .PHONY: build clean deploy test
 
 build:
-	go build -o bin/domainfree cmd/domainfree/main.go
-	go build -o bin/ping cmd/ping/main.go
+	# Use Amazon Linux arch
+	GOARCH=amd64 GOOS=linux go build -o bin/domainfree cmd/domainfree/main.go
+	GOARCH=amd64 GOOS=linux go build -o bin/ping cmd/ping/main.go
 
 clean:
 	rm -rf ./bin
