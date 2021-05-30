@@ -17,6 +17,8 @@ test:
 
 deploy: clean build
 	mkdir zip
-	zip zip/ping.zip bin/ping
 	zip zip/domainfree.zip bin/domainfree
+	zip zip/ping.zip bin/ping
 	aws s3 sync zip s3://kicker-deployments --delete
+	sh scripts/update-lambda.sh Kicker-DomainFree domainfree.zip
+	sh scripts/update-lambda.sh Kicker-Ping ping.zip
