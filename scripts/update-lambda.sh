@@ -17,5 +17,5 @@ if [ 0 -eq $? ]; then
 		--s3-key $2 \
 		> /dev/null
 else
-	echo "Lambda '$1' does not exist - this means that it needs to be created with CDK first"
+	echo "Lambda '$1' cannot be retrieved.\n It may not exist - this will mean that it needs to be created with CDK first"
 fi
