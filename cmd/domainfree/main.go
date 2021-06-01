@@ -78,7 +78,10 @@ func (c *Ctx) Run() error {
 				if IsDomainAvailable(domain) {
 					message := domain + " is available."
 					log.Print(message)
-					return c.Notifier.Notify(message)
+					err := c.Notifier.Notify(message)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

@@ -75,7 +75,10 @@ func (c *Ctx) Run() error {
 		if resp.StatusCode >= 400 {
 			message := url + " is down. Status code: " + strconv.Itoa(resp.StatusCode) + "."
 			log.Print(message)
-			return c.Notifier.Notify(message)
+			err := c.Notifier.Notify(message)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
