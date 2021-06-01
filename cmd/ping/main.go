@@ -68,12 +68,14 @@ func (c *Ctx) Run() error {
 		url := row[0]
 
 		resp, err := http.Get(url)
+		var message string
 		if err != nil {
-			return fmt.Errorf("could not get website status: %w", err)
+			message = "Could not get status of " + url + ". It may be down."
+		} else if resp.StatusCode >= 400 {
+			message = url + " is down. Status code: " + strconv.Itoa(resp.StatusCode) + "."
 		}
 
-		if resp.StatusCode >= 400 {
-			message := url + " is down. Status code: " + strconv.Itoa(resp.StatusCode) + "."
+		if message != "" {
 			log.Print(message)
 			err := c.Notifier.Notify(message)
 			if err != nil {
